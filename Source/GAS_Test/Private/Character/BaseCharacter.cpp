@@ -2,33 +2,191 @@
 
 
 #include "Character/BaseCharacter.h"
+#include "Character/CharacterAttributeSet.h"
 
-// Sets default values
-ABaseCharacter::ABaseCharacter()
+#include "AbilitySystemComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "AIController.h"
+#include "BrainComponent.h"
+#include "Abilities/GameplayAbility.h"
+
+////////////////////////////////////////////////////////////
+
+ABaseCharacter::ABaseCharacter():
+	bIsDead(false),
+	TeamID(-1)
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	CharacterAttributeSet = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
 }
 
-// Called when the game starts or when spawned
+////////////////////////////////////////////////////////////
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	CharacterAttributeSet->OnHealthChange.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
+	CharacterAttributeSet->OnManaChange.AddDynamic(this, &ABaseCharacter::OnManaChanged);
+	CharacterAttributeSet->OnStrengthChange.AddDynamic(this, &ABaseCharacter::OnStrengthChanged);
+	AutoDeterminTeamIDByControllerType();
+	AddGameplayTag(FullHealthTag);
 }
 
-// Called every frame
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::AutoDeterminTeamIDByControllerType()
+{
+	if (GetController() && GetController()->IsPlayerController())
+	{
+		TeamID = 0;
+	}
+	else
+	{
+		TeamID = 1;
+	}
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::Dead()
+{
+	DisableInputControll();
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::DisableInputControll()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		//DisableInput(PlayerController);
+		PlayerController->DisableInput(PlayerController);
+	}
+	AAIController* AIController = Cast<AAIController>(GetController());
+	if (AIController)
+	{
+		AIController->GetBrainComponent()->StopLogic(FString("Whatever reason"));
+	}
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::EnableInputControll()
+{
+	if (!bIsDead)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		if (PlayerController)
+		{
+			//DisableInput(PlayerController);
+			PlayerController->EnableInput(PlayerController);
+		}
+		AAIController* AIController = Cast<AAIController>(GetController());
+		if (AIController)
+		{
+			AIController->GetBrainComponent()->RestartLogic();
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////
+
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-// Called to bind functionality to input
+////////////////////////////////////////////////////////////
+
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
+////////////////////////////////////////////////////////////
+
+UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::AddAbility(TSubclassOf<UGameplayAbility> AbilityToAdd)
+{
+	if (!HasAuthority()) return;
+	if (!AbilitySystemComponent || !AbilityToAdd) return;
+
+	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec{ AbilityToAdd });
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::OnHealthChanged(float Health, float MaxHealth)
+{
+	if (Health <= 0.f && !bIsDead)
+	{
+		bIsDead = true;
+		Dead();
+		BP_Die();
+	}
+	BP_OnHealthChanged(Health, MaxHealth);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::OnManaChanged(float Mana, float MaxMana)
+{
+	BP_OnManaChanged(Mana, MaxMana);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::OnStrengthChanged(float Strength, float MaxStrength)
+{
+	BP_OnStrengthChanged(Strength, MaxStrength);
+}
+
+////////////////////////////////////////////////////////////
+
+bool ABaseCharacter::IsTargetHostile(ABaseCharacter* Target)
+{
+	// WTF?? TeamID is private member, yet no compile error
+	if (Target->GetTeamID() == TeamID || !(Target->GetTeamID() != -1))
+	{
+		return false;
+	}
+	return true;
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::AddGameplayTag(FGameplayTag& TagToAdd)
+{
+	AbilitySystemComponent->AddLooseGameplayTag(TagToAdd);
+
+	AbilitySystemComponent->SetTagMapCount(TagToAdd, 1);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::RemoveGameplayTag(FGameplayTag& TagToRemove)
+{
+	AbilitySystemComponent->RemoveLooseGameplayTag(TagToRemove);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::HitStun(float Duration)
+{
+	DisableInputControll();
+
+	GetWorldTimerManager().SetTimer(StunHandle, this, &ABaseCharacter::EnableInputControll, Duration);
+}
+
+////////////////////////////////////////////////////////////
