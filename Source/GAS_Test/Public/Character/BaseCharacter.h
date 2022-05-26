@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "BaseCharacter.generated.h"
 
+class UBaseGameplayAbility;
 class UGameplayAbility;
 class UAbilitySystemComponent;
 class UCharacterAttributeSet;
@@ -32,6 +33,8 @@ protected:
 	void DisableInputControll();
 	void EnableInputControll();
 
+	void AddAbilityToUI(TSubclassOf<UBaseGameplayAbility> AbilityToAdd);
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS", meta=(AllowPrivateAccess="true"))
 	UAbilitySystemComponent* AbilitySystemComponent;
@@ -52,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GAS")
 	void AddAbility(TSubclassOf<UGameplayAbility> AbilityToAdd);
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void AddAbilities(TArray<TSubclassOf<UGameplayAbility>> AbilitiesToAdd);
+
 
 	UFUNCTION(BlueprintCallable)
 	void OnHealthChanged(float Health, float MaxHealth);

@@ -3,12 +3,16 @@
 
 #include "Character/BaseCharacter.h"
 #include "Character/CharacterAttributeSet.h"
+#include "Character/BasePlayerController.h"
+#include "Character/GAS/BaseGameplayAbility.h"
 
 #include "AbilitySystemComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "AIController.h"
 #include "BrainComponent.h"
 #include "Abilities/GameplayAbility.h"
+
+
 
 ////////////////////////////////////////////////////////////
 
@@ -95,6 +99,22 @@ void ABaseCharacter::EnableInputControll()
 
 ////////////////////////////////////////////////////////////
 
+void ABaseCharacter::AddAbilityToUI(TSubclassOf<UBaseGameplayAbility> AbilityToAdd)
+{
+	ABasePlayerController* BasePlayerController = Cast<ABasePlayerController>(GetController());
+	if(BasePlayerController)
+	{
+		UBaseGameplayAbility* AbilityInstance = AbilityToAdd.Get()->GetDefaultObject<UBaseGameplayAbility>();
+		if(AbilityInstance)
+		{
+			const FGameplayAbilityInfo AbilityInfo = AbilityInstance->GetGameplayAbilityInfo();
+			BasePlayerController->AbilityToUI(AbilityInfo);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////
+
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -123,6 +143,24 @@ void ABaseCharacter::AddAbility(TSubclassOf<UGameplayAbility> AbilityToAdd)
 
 	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec{ AbilityToAdd });
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
+
+////////////////////////////////////////////////////////////
+
+void ABaseCharacter::AddAbilities(TArray<TSubclassOf<UGameplayAbility>> AbilitiesToAdd)
+{
+	for(const auto Ability : AbilitiesToAdd)
+	{
+		AddAbility(Ability);
+		if(Ability->IsChildOf(UBaseGameplayAbility::StaticClass()))
+		{
+			TSubclassOf<UBaseGameplayAbility> BaseAbilityClass = *Ability;
+			if(BaseAbilityClass)
+			{
+				AddAbilityToUI(BaseAbilityClass);
+			}
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////
