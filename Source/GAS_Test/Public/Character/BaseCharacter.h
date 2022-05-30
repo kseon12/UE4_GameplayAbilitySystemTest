@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
 #include "BaseCharacter.generated.h"
 
 class UBaseGameplayAbility;
@@ -90,5 +92,8 @@ public:
 	FGameplayTag FullHealthTag;
 
 	UFUNCTION(BlueprintCallable)
-		void HitStun(float Duration);
+	void HitStun(float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "BaseCharaacter")
+	void ApplyGESpecHandleToTargetDataSpecHandle(const FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, const FGameplayAbilityTargetDataHandle& TargetDataHandle);
 };

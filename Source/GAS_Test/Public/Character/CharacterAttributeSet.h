@@ -8,7 +8,9 @@
 #include "CharacterAttributeSet.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangeSignature, float, Health, float, MaxHealth);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnManaChangeSignature, float, Mana, float, MaxMana);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStrengthChangeSignature, float, Strength, float, MaxStrength);
 
 UCLASS()
@@ -18,7 +20,7 @@ class GAS_TEST_API UCharacterAttributeSet : public UAttributeSet
 public:
 	UCharacterAttributeSet();
 
-protected:
+	//protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeBase", meta = (AllowPrivateAccess = "true"))
 	FGameplayAttributeData Health;
 
@@ -36,6 +38,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeBase", meta = (AllowPrivateAccess = "true"))
 	FGameplayAttributeData MaxStrength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeBase", meta = (AllowPrivateAccess = "true"))
+	FGameplayAttributeData Power;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeBase", meta = (AllowPrivateAccess = "true"))
+	FGameplayAttributeData Armour;
 
 public:
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UCharacterAttributeSet, Health);
@@ -67,6 +75,16 @@ public:
 	GAMEPLAYATTRIBUTE_VALUE_GETTER(MaxStrength);
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(MaxStrength);
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(MaxStrength);
+
+	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UCharacterAttributeSet, Power);
+	GAMEPLAYATTRIBUTE_VALUE_GETTER(Power);
+	GAMEPLAYATTRIBUTE_VALUE_INITTER(Power);
+	GAMEPLAYATTRIBUTE_VALUE_SETTER(Power);
+
+	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UCharacterAttributeSet, Armour);
+	GAMEPLAYATTRIBUTE_VALUE_GETTER(Armour);
+	GAMEPLAYATTRIBUTE_VALUE_INITTER(Armour);
+	GAMEPLAYATTRIBUTE_VALUE_SETTER(Armour);
 
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 

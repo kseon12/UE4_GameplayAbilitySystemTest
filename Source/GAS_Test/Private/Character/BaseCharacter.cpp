@@ -228,3 +228,13 @@ void ABaseCharacter::HitStun(float Duration)
 }
 
 ////////////////////////////////////////////////////////////
+
+void ABaseCharacter::ApplyGESpecHandleToTargetDataSpecHandle(const FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, const FGameplayAbilityTargetDataHandle& TargetDataHandle)
+{
+	for(const auto Data : TargetDataHandle.Data)
+	{
+		Data->ApplyGameplayEffectSpec(*InGameplayEffectSpecHandle.Data.Get());
+	}
+}
+
+////////////////////////////////////////////////////////////

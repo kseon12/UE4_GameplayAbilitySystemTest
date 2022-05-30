@@ -9,13 +9,15 @@
 #include "GameFramework/Character.h"
 ////////////////////////////////////////////////////////////
 
-UCharacterAttributeSet::UCharacterAttributeSet():
+UCharacterAttributeSet::UCharacterAttributeSet() :
 	Health(100.0f),
 	MaxHealth(100.0f),
 	Mana(100.f),
 	MaxMana(100.f),
 	Strength(100.f),
-	MaxStrength(100.f)
+	MaxStrength(100.f),
+	Power(50.f),
+	Armour(50.f)
 {
 }
 
@@ -25,6 +27,9 @@ void UCharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModC
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	/**
+	 * A bit unnesesary stuff. Can be changed to Data.EvaluatedData.Attribute == GetHealthAttribute(); etc
+	 */
 	if (Data.EvaluatedData.Attribute.GetUProperty() == FindFieldChecked<FProperty>(UCharacterAttributeSet::StaticClass(), GET_MEMBER_NAME_CHECKED(UCharacterAttributeSet, Health)))
 	{
 		Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.f, MaxHealth.GetCurrentValue()));
